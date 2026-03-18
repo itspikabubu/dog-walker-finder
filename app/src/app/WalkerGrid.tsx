@@ -13,14 +13,32 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 function StarRating({ rating }: { rating: number }) {
-  const fullStars = Math.floor(rating);
-  const hasHalf = rating % 1 >= 0.5;
   return (
-    <span className="inline-flex items-center gap-0.5 text-amber-500">
-      {Array.from({ length: fullStars }, (_, i) => (
-        <span key={i}>&#9733;</span>
-      ))}
-      {hasHalf && <span>&#9734;</span>}
+    <span className="inline-flex items-center gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => {
+        const fillPercent = Math.min(1, Math.max(0, rating - i)) * 100;
+        const clipId = `star-clip-${i}-${rating}`;
+        return (
+          <svg key={i} width="18" height="18" viewBox="0 0 24 24" className="shrink-0">
+            <defs>
+              <clipPath id={clipId}>
+                <rect x="0" y="0" width={`${fillPercent}%`} height="100%" />
+              </clipPath>
+            </defs>
+            {/* Empty star background */}
+            <path
+              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              fill="#e5e0d8"
+            />
+            {/* Filled star with proportional clip */}
+            <path
+              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              fill="#f59e0b"
+              clipPath={`url(#${clipId})`}
+            />
+          </svg>
+        );
+      })}
       <span className="ml-1 text-warm-700 font-semibold text-sm">
         {rating.toFixed(1)}
       </span>
