@@ -28,29 +28,9 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function meetsAllCriteria(w: Walker): boolean {
-  return (
-    w.rating >= 4.8 &&
-    (w.reviewCount ?? 0) > 50 &&
-    w.pricePerWalk !== null &&
-    w.pricePerWalk < 60
-  );
-}
-
 function WalkerCard({ walker }: { walker: Walker }) {
-  const isTop = meetsAllCriteria(walker);
   return (
-    <div
-      className={`relative bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow border ${
-        isTop ? "border-accent ring-2 ring-accent/30" : "border-warm-200"
-      } overflow-hidden flex flex-col`}
-    >
-      {isTop && (
-        <div className="bg-accent text-white text-xs font-bold px-3 py-1 text-center tracking-wide uppercase">
-          Top Pick
-        </div>
-      )}
-
+    <div className="relative bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow border border-warm-200 overflow-hidden flex flex-col">
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
           <h3 className="font-bold text-lg text-warm-900 leading-tight">
@@ -78,7 +58,37 @@ function WalkerCard({ walker }: { walker: Walker }) {
           <span className="text-accent-dark font-bold text-lg">
             {walker.priceDisplay}
           </span>
+          {walker.priceConfirmed ? (
+            <span className="inline-flex items-center text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+              Price Verified &#10003;
+            </span>
+          ) : (
+            <span className="inline-flex items-center text-xs font-medium text-warm-500 bg-warm-100 px-2 py-0.5 rounded-full" title="Area median is ~$25/walk">
+              Area median ~$25/walk
+            </span>
+          )}
         </div>
+
+        {(walker.experience || walker.repeatClients !== null) && (
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {walker.experience && (
+              <span className="inline-flex items-center text-xs font-medium text-warm-700 bg-warm-100 px-2.5 py-1 rounded-full">
+                <svg className="w-3.5 h-3.5 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {walker.experience}
+              </span>
+            )}
+            {walker.repeatClients !== null && (
+              <span className="inline-flex items-center text-xs font-medium text-warm-700 bg-warm-100 px-2.5 py-1 rounded-full">
+                <svg className="w-3.5 h-3.5 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {walker.repeatClients} repeat clients
+              </span>
+            )}
+          </div>
+        )}
 
         <p className="text-warm-500 text-sm mb-3 flex items-center gap-1">
           <svg
@@ -138,21 +148,9 @@ function WalkerCard({ walker }: { walker: Walker }) {
 
 export default function WalkerGrid({ walkers }: { walkers: Walker[] }) {
   const [sortBy, setSortBy] = useState<SortKey>("rating");
-  const [filterRating, setFilterRating] = useState(false);
-  const [filterReviews, setFilterReviews] = useState(false);
-  const [filterPrice, setFilterPrice] = useState(false);
 
-  const filtered = useMemo(() => {
-    let result = [...walkers];
-
-    if (filterRating) result = result.filter((w) => w.rating > 4.8);
-    if (filterReviews)
-      result = result.filter((w) => (w.reviewCount ?? 0) > 50);
-    if (filterPrice)
-      result = result.filter(
-        (w) => w.pricePerWalk !== null && w.pricePerWalk < 60
-      );
-
+  const sorted = useMemo(() => {
+    const result = [...walkers];
     result.sort((a, b) => {
       switch (sortBy) {
         case "rating":
@@ -163,82 +161,38 @@ export default function WalkerGrid({ walkers }: { walkers: Walker[] }) {
           return (a.pricePerWalk ?? 999) - (b.pricePerWalk ?? 999);
       }
     });
-
     return result;
-  }, [walkers, sortBy, filterRating, filterReviews, filterPrice]);
+  }, [walkers, sortBy]);
 
   return (
     <div>
-      <div className="bg-white rounded-2xl shadow-sm border border-warm-200 p-4 sm:p-6 mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-warm-700">
-              Filters:
-            </span>
-            <button
-              onClick={() => setFilterRating(!filterRating)}
-              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                filterRating
-                  ? "bg-accent text-white border-accent"
-                  : "bg-warm-50 text-warm-600 border-warm-200 hover:border-warm-400"
-              }`}
-            >
-              Rating &gt;4.8
-            </button>
-            <button
-              onClick={() => setFilterReviews(!filterReviews)}
-              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                filterReviews
-                  ? "bg-accent text-white border-accent"
-                  : "bg-warm-50 text-warm-600 border-warm-200 hover:border-warm-400"
-              }`}
-            >
-              Reviews &gt;50
-            </button>
-            <button
-              onClick={() => setFilterPrice(!filterPrice)}
-              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                filterPrice
-                  ? "bg-accent text-white border-accent"
-                  : "bg-warm-50 text-warm-600 border-warm-200 hover:border-warm-400"
-              }`}
-            >
-              Price &lt;$60
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 sm:ml-auto">
-            <span className="text-sm font-semibold text-warm-700">
-              Sort by:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortKey)}
-              className="text-sm bg-warm-50 border border-warm-200 rounded-lg px-3 py-1.5 text-warm-700 focus:outline-none focus:ring-2 focus:ring-accent/50"
-            >
-              <option value="rating">Rating</option>
-              <option value="reviews">Reviews</option>
-              <option value="price">Price</option>
-            </select>
-          </div>
-        </div>
+      <div className="bg-accent/10 border border-accent/30 rounded-2xl p-4 sm:p-5 mb-6 text-center">
+        <p className="text-sm sm:text-base font-semibold text-warm-800">
+          All walkers listed meet our strict criteria: Rating above 4.8 &#9733; | More than 50 verified reviews | Price under $60/walk
+        </p>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 text-warm-400">
-          <p className="text-xl mb-2">No walkers match your filters</p>
-          <p className="text-sm">Try adjusting your filter criteria</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((walker) => (
-            <WalkerCard key={walker.id} walker={walker} />
-          ))}
-        </div>
-      )}
+      <div className="flex items-center justify-end gap-2 mb-6">
+        <span className="text-sm font-semibold text-warm-700">Sort by:</span>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortKey)}
+          className="text-sm bg-warm-50 border border-warm-200 rounded-lg px-3 py-1.5 text-warm-700 focus:outline-none focus:ring-2 focus:ring-accent/50"
+        >
+          <option value="rating">Rating</option>
+          <option value="reviews">Reviews</option>
+          <option value="price">Price</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sorted.map((walker) => (
+          <WalkerCard key={walker.id} walker={walker} />
+        ))}
+      </div>
 
       <p className="text-center text-warm-400 text-sm mt-6">
-        Showing {filtered.length} of {walkers.length} walkers
+        Showing {sorted.length} walkers
       </p>
     </div>
   );

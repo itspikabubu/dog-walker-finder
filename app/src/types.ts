@@ -6,15 +6,15 @@ export interface Walker {
   reviewCount: number | null;
   pricePerWalk: number | null;
   priceDisplay: string;
-  priceNote: string;
+  priceConfirmed: boolean;
   services: string[];
   location: string;
   profileUrl: string;
   website: string | null;
   phone: string | null;
   highlight: string;
-  meetsAllFilters: boolean;
-  filterNotes: string;
+  experience: string | null;
+  repeatClients: number | null;
 }
 
 export interface WalkerData {
@@ -25,6 +25,7 @@ export interface WalkerData {
       minRating: number;
       minReviews: number;
       maxPrice: number;
+      note: string;
     };
   };
   walkers: Walker[];
